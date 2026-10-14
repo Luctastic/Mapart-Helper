@@ -8,9 +8,11 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.shapes.Shapes;
 import rh.maparthelper.MapartHelper;
@@ -144,6 +146,11 @@ public class MapartSchematicBuilder {
         ListTag palette = new ListTag();
         for (Block block : blocks_palette) {
             BlockState blockState = PaletteGenerator.getDefaultPaletteState(block);
+
+            if(block == Blocks.BEACON){
+                blockState = PaletteGenerator.getDefaultPaletteState(Blocks.OAK_LEAVES).trySetValue(BlockStateProperties.WATERLOGGED, true);
+            }
+
             CompoundTag blockEntry = NbtUtils.writeBlockState(blockState);
             palette.add(blockEntry);
         }

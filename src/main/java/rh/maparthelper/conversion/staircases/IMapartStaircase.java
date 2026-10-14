@@ -15,7 +15,7 @@ public interface IMapartStaircase {
                 .map(ints -> Arrays.stream(ints)
                         .map(color -> {
                             MapColorEntry mapColor = PaletteColors.getMapColorEntryByARGB(color);
-                            return mapColor.mapColor() == MapColor.WATER ? 1 : mapColor.brightness().id;
+                            return mapColor.brightness().id;
                         })
                         .toArray()
                 ).toArray(int[][]::new);

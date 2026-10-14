@@ -100,7 +100,6 @@ public class PaletteColors {
             if (excludingColors.contains(mapColor)) continue;
 
             for (int brightness = 0; brightness < 3; brightness++) {
-                if (mapColor == MapColor.WATER && brightness != 2) continue; // Allow only HIGH for water color
                 byte colorByte = (byte) ((mapColor.id << 2) | brightness);
 
                 int renderColor = mapRenderColors[colorByte + 128];
@@ -148,7 +147,7 @@ public class PaletteColors {
         for (MapColor mapColor : preset.getMapColors()) {
             if (excludingColors.contains(mapColor)) continue;
 
-            int brightness = mapColor == MapColor.WATER ? 2 : 1; // Normal brightness for water color is HIGH(2)
+            int brightness = 1;
             byte colorByte = (byte) ((mapColor.id << 2) | brightness);
 
             int renderColor = MapColor.getColorFromPackedId(colorByte);
