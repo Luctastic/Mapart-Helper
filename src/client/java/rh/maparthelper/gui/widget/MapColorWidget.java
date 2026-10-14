@@ -85,8 +85,8 @@ public class MapColorWidget extends AbstractWidget {
                     getBottom()
             );
             *///?}
-        } else if (onlyNormalBrightness || color == MapColor.WATER) {
-            MapColor.Brightness brightness = color == MapColor.WATER ? MapColor.Brightness.HIGH : MapColor.Brightness.NORMAL;
+        } else if (onlyNormalBrightness) {
+            MapColor.Brightness brightness = MapColor.Brightness.NORMAL;
             int waterColor = ARGB.color(alpha, color.calculateARGBColor(brightness));
             graphics.fill(x, y, x + width, y + height, waterColor);
         } else {
