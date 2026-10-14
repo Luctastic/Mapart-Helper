@@ -55,6 +55,8 @@ public class PaletteGenerator {
             }
         }
 
+        palette.get(MapColor.WATER.id).add(Blocks.BEACON);
+
         ItemStack[] toolItems = {
                 new ItemStack(Items.NETHERITE_SWORD),
                 new ItemStack(Items.NETHERITE_AXE),

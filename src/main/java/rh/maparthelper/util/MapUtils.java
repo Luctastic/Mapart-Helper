@@ -5,6 +5,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.MapColor;
 import org.joml.Vector2i;
 import rh.maparthelper.palette.PaletteDataManager;
 import rh.maparthelper.palette.PaletteGenerator;
@@ -38,14 +41,22 @@ public class MapUtils {
 
         pos.set(startX, y, startZ);
         for (int color : palette.keySet()) {
+
             for (Block block : palette.get(color)) {
-                world.setBlock(pos, PaletteGenerator.getDefaultPaletteState(block), 816);
+                BlockState state = PaletteGenerator.getDefaultPaletteState(block);
+
+                if(block == Blocks.BEACON){
+                    state = PaletteGenerator.getDefaultPaletteState(Blocks.OAK_LEAVES).trySetValue(BlockStateProperties.WATERLOGGED, true);
+                }
+
+                world.setBlock(pos, state, 816);
                 pos = pos.move(Direction.EAST);
                 if (pos.getX() == startX + 128) {
                     pos = pos.move(Direction.WEST, 128);
                     pos = pos.move(Direction.SOUTH);
                 }
             }
+
             pos = pos.move(Direction.WEST, pos.getX() - startX);
             pos = pos.move(Direction.SOUTH);
         }

@@ -102,10 +102,6 @@ public class MapColorPickerDropdown extends DropdownOverlayButton {
             if (paletteDataManager.getPresetsHandler().getSelectedPreset().getBlockOfMapColor(color) == null) {
                 return false;
             }
-            if (color == MapColor.WATER) {
-                setColor(new MapColorEntry(color, MapColor.Brightness.HIGH));
-                return true;
-            }
             if (onlyNormalBrightness) {
                 setColor(new MapColorEntry(color, MapColor.Brightness.NORMAL));
                 return true;
