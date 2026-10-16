@@ -2,10 +2,7 @@ package rh.maparthelper.conversion.schematic;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.*;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -16,6 +13,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.shapes.Shapes;
 import rh.maparthelper.MapartHelper;
+import rh.maparthelper.colors.MapColorEntry;
 import rh.maparthelper.config.UseAuxBlocks;
 import rh.maparthelper.conversion.staircases.StaircaseStyles;
 import rh.maparthelper.palette.PaletteColors;
@@ -34,6 +32,7 @@ public class MapartSchematicBuilder {
     private final int[][] mapColors;
     private final int xSize;
     private int ySize;
+    private int minY = 0;
     private final int zSize;
     private final int lowestBlockLayer; // 0 as default, 1 for placing aux blocks at the platform layer height
     private final List<Block> blocks_palette = new ArrayList<>();
@@ -67,22 +66,51 @@ public class MapartSchematicBuilder {
         for (int z = 0; z < zSize; z++) {
             for (int x = 0; x < xSize; x++) {
                 int y = getBlockHeight(x, z);
+
                 if (useAuxBlocks == UseAuxBlocks.TRUST_ME) {
-                    MapColor mapColor = PaletteColors.getMapColorEntryByARGB(mapColors[z][x]).mapColor();
-                    if (mapColor != MapColor.NONE)
-                        addColor(mapColor, x, y, z);
+                    MapColorEntry entry = PaletteColors.getMapColorEntryByARGB(mapColors[z][x]);
+
+                    if (entry.mapColor() != MapColor.NONE) {
+                        addColor(entry, x, y, z);
+                    }
                 } else if (z == 0) {
                     addBlock(auxBlock, x, y, z);
                 } else {
-                    MapColor mapColor = PaletteColors.getMapColorEntryByARGB(mapColors[z - 1][x]).mapColor();
-                    if (mapColor != MapColor.NONE)
-                        addColor(mapColor, x, y, z);
+                    MapColorEntry entry = PaletteColors.getMapColorEntryByARGB(mapColors[z - 1][x]);
+
+                    if (entry.mapColor() != MapColor.NONE) {
+                        addColor(entry, x, y, z);
+                    }
                 }
             }
         }
+
+        normalizeYCoordinates();
         addSize();
         addPaletteAndBlocks();
         return nbt;
+    }
+
+    private void normalizeYCoordinates() {
+        if (minY >= 0) {
+            return;
+        }
+
+        int offset = -minY;
+
+        for (int i = 0; i < blocks.size(); i++) {
+            CompoundTag entry = blocks.getCompound(i).orElseThrow();
+
+            ListTag pos = entry.getList("pos").orElseThrow();
+
+            int y = pos.getInt(1).orElseThrow();
+
+            pos.set(1, IntTag.valueOf(y + offset));
+            entry.put("pos", pos);
+        }
+
+        ySize += offset;
+        minY = 0;
     }
 
     private int getBlockMaterialId(Block block) {
@@ -92,11 +120,35 @@ public class MapartSchematicBuilder {
         return blocks_palette.size() - 1;
     }
 
-    private void addColor(MapColor mapColor, int x, int y, int z) {
+    private void addColor(MapColorEntry entry, int x, int y, int z) {
+        MapColor mapColor = entry.mapColor();
         Block block = preset.getBlockOfMapColor(mapColor);
-        addBlock(block, x, y, z);
-        if (useAuxBlocks != UseAuxBlocks.NO_AUX)
+
+        if (mapColor == MapColor.WATER) {
+            int leafCount = getWaterLeafCount(entry);
+
+            for (int i = 0; i < leafCount; i++) {
+                addBlock(block, x, y - i, z);
+            }
+
+            // solid block must be below water
+            addBlock(auxBlock, x, y - leafCount, z);
+        } else {
+            addBlock(block, x, y, z);
+        }
+
+        if (useAuxBlocks != UseAuxBlocks.NO_AUX) {
             addAuxBlocksForColor(block, x, y, z);
+        }
+    }
+
+    private int getWaterLeafCount(MapColorEntry entry) {
+        // water shades are determined by depth
+        return switch (entry.brightness()) {
+            case LOW, LOWEST -> 10;
+            case NORMAL -> 5;
+            case HIGH -> 1;
+        };
     }
 
     private void addAuxBlocksForColor(Block colorBlock, int colorX, int colorY, int colorZ) {
@@ -131,15 +183,20 @@ public class MapartSchematicBuilder {
 
     private void addBlock(Block block, int x, int y, int z) {
         CompoundTag entry = new CompoundTag();
+
         ListTag pos = new ListTag();
         pos.add(IntTag.valueOf(x));
         pos.add(IntTag.valueOf(y));
         pos.add(IntTag.valueOf(z));
+
         entry.put("pos", pos);
         int blockId = getBlockMaterialId(block);
         entry.put("state", IntTag.valueOf(blockId));
+
         blocks.add(entry);
-        ySize = Math.max(y + 1, ySize);
+
+        minY = Math.min(minY, y);
+        ySize = Math.max(ySize, y + 1);
     }
 
     private void addPaletteAndBlocks() {
