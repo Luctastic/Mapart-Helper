@@ -4,6 +4,13 @@
 > [Issues](https://github.com/Redheris/Mapart-Helper/issues) page — your feedback will be a huge help
 
 ---
+# Fork Changes
+
+This fork adds support for water shading in staircase mode.
+
+- **Water shades:** Select **Beacon** as the water color in Mapart Helper. The generated schematic uses waterlogged oak leaves to represent water.
+- **Depth-based shading:** Different water shades are represented by different numbers of vertically stacked waterlogged oak leaves. Darker shades use more leaves, with a solid block beneath the stack to ensure proper support.
+---
 
 **Mapart Helper** aims to make working with maparts as convenient and enjoyable as possible.
 
